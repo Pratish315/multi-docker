@@ -1,0 +1,24 @@
+sudo: required
+
+services:
+    - docker
+
+
+before_install:
+    - docker build -t pratish420/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+    - docker run -e CI=true pratish420/react-test npm test
+
+after_success:
+    - docker build -t pratish420/multi-client ./client
+    - docker build -t pratish420/multi-nginx ./nginx
+    - docker build -t pratish420/multi-server ./server
+    - docker build -t pratish420/multi-worker ./worker
+    # Log in to the docker CLI - LEFT is used as input for the right .. pipeline?
+    - echo "$"DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --pasword-stdin
+    # Push these images to Docker
+    - docker push pratish420/multi-client
+    - docker push pratish420/multi-nginx
+    - docker push pratish420/multi-server
+    - docker push pratish420/multi-worker
